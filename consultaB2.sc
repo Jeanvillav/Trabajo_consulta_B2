@@ -1,6 +1,7 @@
 import monix.eval.Task
 import monix.reactive.Observable
 import monix.execution.Scheduler.Implicits.global
+import monix.reactive.Consumer
 
 object ReactiveProgrammingExample extends App {
 
@@ -16,12 +17,17 @@ object ReactiveProgrammingExample extends App {
   // Tomamos los primeros 3 elementos
   val taken: Observable[Int] = filtered.take(3)
 
-  // Creamos un observer que imprimirá cada elemento recibido
-  val printObserver = Observer.foreach[Int](println)
+  // Creamos un consumer que imprimirá cada elemento recibido
+  val printConsumer: Consumer[Int, Unit] = Consumer.foreach[Int](println)
 
-  // Conectamos el observable con el observer para consumir los resultados
-  val task: Task[Unit] = taken.consumeWith(printObserver)
+  // Conectamos el observable con el consumer para consumir los resultados
+  val task: Task[Unit] = taken.consumeWith(printConsumer)
 
-  // Ejecutamos la tarea
-  task.runAsync
+  // Ejecutamos la tarea y manejamos el resultado
+  task.runAsync {
+    case Left(ex) =>
+      println(s"Error al ejecutar la tarea: $ex")
+    case Right(_) =>
+      println("Tarea completada exitosamente")
+  }
 }
